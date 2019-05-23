@@ -84,16 +84,21 @@ def executeRulesWithJCliff(data,rulesdir):
   addToEnv('JCLIFF_HOME', data['jcliff_home'])
 
   try:
-    output = subprocess.check_output(jcliff_command_line, shell=False, env=os.environ)
+    output = subprocess.check_output(jcliff_command_line,stderr=subprocess.STDOUT, shell=False, env=os.environ)
+    status = 0
   except subprocess.CalledProcessError as jcliffexc:
-    error = str(jcliffexc.output, 'utf-8')
+    error = jcliffexc.output.decode()
     if (jcliffexc.returncode != 2) and (jcliffexc.returncode != 0):
-        return { "failed": { "status" : jcliffexc.returncode, "output":  error, "rulesdir": rulesdir , "jcliff_cli": jcliff_command_line  } }
+        return { "failed": True, "report": { "status" : jcliffexc.returncode, "output": output, "rulesdir": rulesdir , "jcliff_cli": jcliff_command_line , "JAVA_HOME": os.getenv("JAVA_HOME","Not defined"), "JCLIFF_HOME": os.getenv("JCLIFF_HOME", "Not defined"), "JBOSS_HOME": os.getenv("JBOSS_HOME", "Not defined"), "error": error } }, jcliffexc.returncode
     else:
-        return {"present:": formatOutput2(error) }
+        return {"present:": error },2
   except Exception as e:
-     print(e)
-  return {"present" : output, "ruledir" : rulesdir, "jcliff_cli": jcliff_command_line }
+     output = e
+     status = 1
+  if status == 0:
+    return {"present" : output, "rc": status, "ruledir" : rulesdir, "jcliff_cli": jcliff_command_line }, status
+  else:
+      return {"failed" : True, "report": output, "rc": status, "ruledir" : rulesdir, "jcliff_cli": jcliff_command_line }, status
 
 def copyRulesToRulesdir(rulefiles, rulesdir):
   try:
@@ -104,17 +109,25 @@ def copyRulesToRulesdir(rulefiles, rulesdir):
   except OSError as e:
     print('Directory not copied. Error: %s' % e)
 
-def jcliff_present(data):
+def ansibleResultFromStatus(status):
   has_changed = False
+  has_failed = False
+  if status == 2:
+    has_changed = True
+  if status != 0 and status != 2:
+    has_failed = True
+  return (has_changed, has_failed)
+
+def jcliff_present(data):
   rulesdir = tempfile.mkdtemp()
   generateRuleFromTemplate(data, rulesdir)
   if data['rule_file'] is not None:
     copyRulesToRulesdir(data['rule_file'], rulesdir)
   print("Executing JCliff:")
-  meta = executeRulesWithJCliff(data, rulesdir)
-  has_changed = True
-  #shutil.rmtree(rulesdir)name=name)
-  return (has_changed, meta)
+  meta, status = executeRulesWithJCliff(data, rulesdir)
+  #shutil.rmtree(rulesdir)
+  has_changed, has_failed = ansibleResultFromStatus(status)
+  return (has_changed, has_failed, meta)
 
 def jcliff_absent(data=None):
    has_changed = False
@@ -187,7 +200,7 @@ def main():
         "present": jcliff_present,
         "absent": jcliff_absent,
     }
-    has_changed, result = choice_map.get(module.params['state'])(data=module.params)
-    module.exit_json(changed=has_changed, meta=result)
+    has_changed, has_failed, result = choice_map.get(module.params['state'])(data=module.params)
+    module.exit_json(changed=has_changed, failed=has_failed, meta=result)
 if __name__ == '__main__':
     main()
