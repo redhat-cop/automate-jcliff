@@ -111,7 +111,7 @@ def jcliff_absent(data=None):
    meta = {"absent": "not yet implemented"}
 
 def main():
-    default_jcliff_home = "/usr/share/jcliff-2.11.12"
+    default_jcliff_home = "/usr/share/jcliff-2.11.13"
     fields = dict(
          jcliff_home=dict(type='str', default=default_jcliff_home),
          jcliff=dict(default='/usr/bin/jcliff', type='str'),
