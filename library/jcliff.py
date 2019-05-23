@@ -121,6 +121,7 @@ def main():
          wfly_home=dict(required=True, type='str'),
          management_host=dict(default='localhost', type='str'),
          management_port=dict(default='9990', type='str'),
+         jcliff_jvm=dict(default=os.getenv("JAVA_HOME",None), type='str', required=False),
          rule_file=dict(required=False, type='str'),
          subsystems=dict(type='list', required=False, elements='dict',
             options=dict(
