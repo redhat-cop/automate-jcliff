@@ -16,23 +16,6 @@ def formatOutput(output):
       result += { i : line }
   return result
 
-def formatOutput2(output):
-  result = ""
-  if type(output) is not list:
-    for line in output.split(os.linesep):
-      result += { line : str("") }
-  else:
-    for line in output:
-      if type(line) is dict:
-        for item in line:
-          result += { str(item): str("") }
-      else:
-        result += { str(item): str("") }
-  return result
-
-def formatOutput3(output):
-  return output.split(os.linesep)
-
 def renderFromTemplate(rulesdir, template_name, output_file,values):
   # FIXME: can't load that everytime
   file_loader = FileSystemLoader('rules_templates')
@@ -76,6 +59,7 @@ def executeRulesWithJCliff(data,rulesdir):
     jcliff_command_line.extend(["--user=" + data["management_username"]])
   if data["management_password"] is not None:
     jcliff_command_line.extend(["--password=" + data["management_password"]])
+
   jcliff_command_line.extend(listRuleFiles(rulesdir))
   output = None
   status = "undefined"
