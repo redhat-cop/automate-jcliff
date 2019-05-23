@@ -64,6 +64,10 @@ def listRuleFiles(rulesdir):
       rule_files.append(rulesdir + "/" + filename)
   return rule_files
 
+def addToEnv(name, value):
+  if value is not None:
+    os.environ[name] = value
+
 def executeRulesWithJCliff(data,rulesdir):
 
   jcliff_command_line = ["bash", "-x", data["jcliff"], "--cli=" + data['wfly_home'] + "/bin/jboss-cli.sh", "--ruledir=" + data['rules_dir'], "--controller=" + data['management_host'] + ":" + data['management_port'], "-v"]
@@ -74,6 +78,11 @@ def executeRulesWithJCliff(data,rulesdir):
     jcliff_command_line.extend(["--password=" + data["management_password"]])
   jcliff_command_line.extend(listRuleFiles(rulesdir))
   output = None
+  status = "undefined"
+  addToEnv('JAVA_HOME', data['jcliff_jvm'])
+  addToEnv('JBOSS_HOME', data['wfly_home'])
+  addToEnv('JCLIFF_HOME', data['jcliff_home'])
+
   try:
     output = subprocess.check_output(jcliff_command_line, shell=False, env=os.environ)
   except subprocess.CalledProcessError as jcliffexc:
