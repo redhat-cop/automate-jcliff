@@ -21,6 +21,16 @@
       jdbc_driver_url: https://repo.maven.apache.org/maven2/org/postgresql/postgresql/9.2-1002-jdbc4/{{ jdbc_driver_filename }}
       jdbc_driver_path: "{{ pgsql_module_dir }}/{{ jdbc_driver_filename }}"
     tasks:
+
+      - name: "Ensures required packages are installed" # mostly needed if running on a docker container
+        yum:
+          name:
+            - zip
+            - unzip
+            - procps-ng
+             - initscripts
+          state: present
+
       - name: "Ensures workdir '{{ workdir }}' is created"
         file:
           path: "{{ workdir }}"
