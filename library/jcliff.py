@@ -16,23 +16,6 @@ def formatOutput(output):
       result += { i : line }
   return result
 
-def formatOutput2(output):
-  result = ""
-  if type(output) is not list:
-    for line in output.split(os.linesep):
-      result += { line : str("") }
-  else:
-    for line in output:
-      if type(line) is dict:
-        for item in line:
-          result += { str(item): str("") }
-      else:
-        result += { str(item): str("") }
-  return result
-
-def formatOutput3(output):
-  return output.split(os.linesep)
-
 def renderFromTemplate(rulesdir, template_name, output_file,values):
   # FIXME: can't load that everytime
   file_loader = FileSystemLoader('rules_templates')
@@ -64,25 +47,42 @@ def listRuleFiles(rulesdir):
       rule_files.append(rulesdir + "/" + filename)
   return rule_files
 
+def addToEnv(name, value):
+  if value is not None:
+    os.environ[name] = value
+
 def executeRulesWithJCliff(data,rulesdir):
-  jcliff_command_line = [data["jcliff"], "--cli=" + data['wfly_home'] + "/bin/jboss-cli.sh", "--ruledir=" + data['rules_dir'], "--controller=" + data['management_host'] + ":" + data['management_port'], "-v"]
+
+  jcliff_command_line = ["bash", "-x", data["jcliff"], "--cli=" + data['wfly_home'] + "/bin/jboss-cli.sh", "--ruledir=" + data['rules_dir'], "--controller=" + data['management_host'] + ":" + data['management_port'], "-v"]
+
   if data["management_username"] is not None:
     jcliff_command_line.extend(["--user=" + data["management_username"]])
   if data["management_password"] is not None:
     jcliff_command_line.extend(["--password=" + data["management_password"]])
+
   jcliff_command_line.extend(listRuleFiles(rulesdir))
   output = None
+  status = "undefined"
+  addToEnv('JAVA_HOME', data['jcliff_jvm'])
+  addToEnv('JBOSS_HOME', data['wfly_home'])
+  addToEnv('JCLIFF_HOME', data['jcliff_home'])
+
   try:
-    output = subprocess.check_output(jcliff_command_line, shell=False, env=os.environ)
+    output = subprocess.check_output(jcliff_command_line,stderr=subprocess.STDOUT, shell=False, env=os.environ)
+    status = 0
   except subprocess.CalledProcessError as jcliffexc:
-    error = str(jcliffexc.output, 'utf-8')
+    error = jcliffexc.output.decode()
     if (jcliffexc.returncode != 2) and (jcliffexc.returncode != 0):
-        return { "failed": { "status" : jcliffexc.returncode, "output":  error, "rulesdir": rulesdir , "jcliff_cli": jcliff_command_line  } }
+        return { "failed": True, "report": { "status" : jcliffexc.returncode, "output": output, "rulesdir": rulesdir , "jcliff_cli": jcliff_command_line , "JAVA_HOME": os.getenv("JAVA_HOME","Not defined"), "JCLIFF_HOME": os.getenv("JCLIFF_HOME", "Not defined"), "JBOSS_HOME": os.getenv("JBOSS_HOME", "Not defined"), "error": error } }, jcliffexc.returncode
     else:
-        return {"present:": formatOutput2(error) }
+        return {"present:": error },2
   except Exception as e:
-     print(e)
-  return {"present" : output, "ruledir" : rulesdir, "jcliff_cli": jcliff_command_line }
+     output = e
+     status = 1
+  if status == 0:
+    return {"present" : output, "rc": status, "ruledir" : rulesdir, "jcliff_cli": jcliff_command_line }, status
+  else:
+      return {"failed" : True, "report": output, "rc": status, "ruledir" : rulesdir, "jcliff_cli": jcliff_command_line }, status
 
 def copyRulesToRulesdir(rulefiles, rulesdir):
   try:
@@ -93,17 +93,25 @@ def copyRulesToRulesdir(rulefiles, rulesdir):
   except OSError as e:
     print('Directory not copied. Error: %s' % e)
 
-def jcliff_present(data):
+def ansibleResultFromStatus(status):
   has_changed = False
+  has_failed = False
+  if status == 2:
+    has_changed = True
+  if status != 0 and status != 2:
+    has_failed = True
+  return (has_changed, has_failed)
+
+def jcliff_present(data):
   rulesdir = tempfile.mkdtemp()
   generateRuleFromTemplate(data, rulesdir)
   if data['rule_file'] is not None:
     copyRulesToRulesdir(data['rule_file'], rulesdir)
   print("Executing JCliff:")
-  meta = executeRulesWithJCliff(data, rulesdir)
-  has_changed = True
-  #shutil.rmtree(rulesdir)name=name)
-  return (has_changed, meta)
+  meta, status = executeRulesWithJCliff(data, rulesdir)
+  #shutil.rmtree(rulesdir)
+  has_changed, has_failed = ansibleResultFromStatus(status)
+  return (has_changed, has_failed, meta)
 
 def jcliff_absent(data=None):
    has_changed = False
@@ -111,7 +119,7 @@ def jcliff_absent(data=None):
    meta = {"absent": "not yet implemented"}
 
 def main():
-    default_jcliff_home = "/usr/share/jcliff-2.11.12"
+    default_jcliff_home = "/usr/share/jcliff-2.11.13"
     fields = dict(
          jcliff_home=dict(type='str', default=default_jcliff_home),
          jcliff=dict(default='/usr/bin/jcliff', type='str'),
@@ -121,6 +129,7 @@ def main():
          wfly_home=dict(required=True, type='str'),
          management_host=dict(default='localhost', type='str'),
          management_port=dict(default='9990', type='str'),
+         jcliff_jvm=dict(default=os.getenv("JAVA_HOME",None), type='str', required=False),
          rule_file=dict(required=False, type='str'),
          subsystems=dict(type='list', required=False, elements='dict',
             options=dict(
@@ -175,7 +184,7 @@ def main():
         "present": jcliff_present,
         "absent": jcliff_absent,
     }
-    has_changed, result = choice_map.get(module.params['state'])(data=module.params)
-    module.exit_json(changed=has_changed, meta=result)
+    has_changed, has_failed, result = choice_map.get(module.params['state'])(data=module.params)
+    module.exit_json(changed=has_changed, failed=has_failed, meta=result)
 if __name__ == '__main__':
     main()
