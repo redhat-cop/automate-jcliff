@@ -7,24 +7,36 @@
       wfly_download_url: https://download.jboss.org/wildfly/16.0.0.Final/{{ wlfy_zipfile }}
       wildfly:
         home: "{{ workdir }}/wildfly-16.0.0.Final/"
-        user: rpelisse
+        user: wildfly
         min_mem: 64m
         max_mem: 512m
         metaspace_size: 96m
         metaspace_maxsize: 256m
-        #gc_log: true
-        #debug:
-        #  suspend: y
-        #  port 8787
       pgsql_module_dir: "{{ wildfly.home }}//modules/org/postgresql/main"
       jdbc_driver_filename: postgresql-9.2-1002-jdbc4.jar
       jdbc_driver_url: https://repo.maven.apache.org/maven2/org/postgresql/postgresql/9.2-1002-jdbc4/{{ jdbc_driver_filename }}
       jdbc_driver_path: "{{ pgsql_module_dir }}/{{ jdbc_driver_filename }}"
+
     tasks:
+
+      - name: "Ensures required packages are installed" # mostly needed if running on a docker container
+        yum:
+          name:
+            - zip
+            - unzip
+            - procps-ng
+            - initscripts
+          state: present
+
       - name: "Ensures workdir '{{ workdir }}' is created"
         file:
           path: "{{ workdir }}"
           state: directory
+
+      - name: "Ensure Wildfly user {{ wildfly.user }} exists"
+        user:
+          name: "{{ wildfly.user }}"
+          comment: "User to run Wildfly"
 
       - name: "Download and unzip Wildfly zipfile from {{ wfly_download_url }}"
         unarchive:
