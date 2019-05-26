@@ -1,0 +1,16 @@
+---
+
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Install Required Packages for Testing
+      package:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - java-1.8.0-openjdk
+        - python-jinja2
+#    - name: Copy Directory
+#      copy:
+#        src: "{{ playbook_dir }}/../../"
+#        dest: /tmp/jcliff-ansible
