@@ -1,5 +1,6 @@
 # jcliff Ansible Support
 
+[![Build Status](https://travis-ci.org/redhat-cop/jboss_eap.svg)](https://travis-ci.org/redhat-cop/automate-jcliff)
 [![Ansible Galaxy](https://img.shields.io/badge/galaxy-redhatcop.jcliff-blue.svg)](https://galaxy.ansible.com/redhat-cop/jcliff)
 
 This repository contains tooling to support utilizing [Ansible](https://www.ansible.com/) with the [jcliff](https://github.com/bserdar/jcliff) utility to manage [Red Hat Enterprise Application Platform (EAP)](https://www.redhat.com/en/technologies/jboss-middleware/application-platform) / [Wildfly](https://wildfly.org/) configuration.
