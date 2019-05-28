@@ -5,6 +5,8 @@
     wfly_home: "/opt/wildfly/wildfly-16.0.0.Final/"
     pgsql_module_dir: "{{ wfly_home }}//modules/org/postgresql/main"
     jdbc_drive_url: https://repo.maven.apache.org/maven2/org/postgresql/postgresql/9.2-1002-jdbc4/postgresql-9.2-1002-jdbc4.jar
+    app_url: http://people.redhat.com/~rpelisse/simple-webapp.war
+    app: /tmp/simple-webapp.war
   tasks:
     - name: "Add JCliff Repo"
       yum_repository:
@@ -17,6 +19,11 @@
       yum:
         name: jcliff
         state: present
+
+    - name: "Download a demo app to deplou"
+      get_url:
+        url: "{{ app_url }}"
+        dest: "{{ app }}"
 
     - name: "Deploy internal templates to remote target"
       copy:
@@ -35,9 +42,9 @@
                 driver_module_name: org.postgresql
                 driver_xa_datasource_class_name: org.postgresql.xa.PGXADataSource
           - datasources:
-              - name: PetStoreDS
-                jndi_name: 'java:jboss/datasources/PetStoreDS'
-                connection_url: 'jdbc:postgresql://petstoreds:5432/petstoredb'
+              - name: MyPostgresDS
+                jndi_name: 'java:jboss/datasources/MyPostgresDS'
+                connection_url: 'jdbc:postgresql://mypostgresds:5432/mydb'
                 driver_name: 'postgresql'
           - system_props:
               - name: myProp
@@ -47,7 +54,7 @@
           - deployments:
               - artifact_id: simple-webapp-v1.war
                 name: simple-webapp
-                path: /home/rpelisse/Repositories/contrib/simple-webapp.git/target/simple-webapp.war
+                path: "{{ app }}"
       notify: "Restart Wildfly Server"
 
   handlers:
