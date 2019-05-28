@@ -1,5 +1,5 @@
 ---
 - name: Wildfly Setup
   import_playbook: ../../wildfly-setup.yml
-# - name: Tune Wildfly
-#   import_playbook: ../../tune-wildfly-with-jcliff.yml
+- name: Tune Wildfly
+  import_playbook: ../../tune-wildfly-with-jcliff.yml

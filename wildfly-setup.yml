@@ -18,7 +18,6 @@
     jdbc_driver_path: "{{ pgsql_module_dir }}/{{ jdbc_driver_filename }}"
 
   tasks:
-
     # mostly needed if running on a docker container
     - name: "Ensures required packages are installed"
       yum:
