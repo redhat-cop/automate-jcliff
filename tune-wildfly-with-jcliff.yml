@@ -19,6 +19,11 @@
           name: jcliff
           state: present
 
+      - name: "Deploy internal templates to remote target"
+        copy:
+          src: templates/rules/
+          dest: /etc/ansible/jcliff/
+
       - name: "Tuning Wildfly using JCliff"
         jcliff:
           wfly_home: "{{ wfly_home }}"

@@ -18,7 +18,7 @@ def formatOutput(output):
 
 def renderFromTemplate(rulesdir, template_name, output_file,values):
   # FIXME: can't load that everytime
-  file_loader = FileSystemLoader('rules_templates')
+  file_loader = FileSystemLoader('/etc/ansible/jcliff/')
   env = Environment(loader=file_loader)
   template = env.get_template(template_name)
   with open( os.path.join(rulesdir,output_file), 'w') as template_file:
