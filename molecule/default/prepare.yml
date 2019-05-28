@@ -10,6 +10,7 @@
       loop:
         - java-1.8.0-openjdk
         - python-jinja2
+        - which
 #    - name: Copy Directory
 #      copy:
 #        src: "{{ playbook_dir }}/../../"
