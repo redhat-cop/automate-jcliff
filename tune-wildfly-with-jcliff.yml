@@ -1,6 +1,7 @@
 ---
 - name: "A Wildfly Playbook"
   hosts: "{{ wildfly_ansible_hosts | default('localhost') }}"
+  gather_facts: "{{ gather_facts_enable | default('false') }}"
   vars:
     wfly_home: "/opt/wildfly/wildfly-16.0.0.Final/"
     pgsql_module_dir: "{{ wfly_home }}//modules/org/postgresql/main"
