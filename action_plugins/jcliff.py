@@ -20,44 +20,40 @@ class ActionModule(ActionBase):
     """remove action plugin only keys"""
     return dict((k, v) for k, v in module_args.items() if k not in ('content', 'decrypt'))
 
+  def writeTemplateResultToFile(self,content):
+    tmp = tempfile.NamedTemporaryFile('w',delete=False)
+    tmp.writelines(content)
+    tmp.close()
+    return tmp.name
+
+  def templateFromJinjaToYml(self, templateName, subsystem_values):
+    templates = self._loader.path_dwim_relative(self._loader.get_basedir(), 'templates/rules', templateName)
+    with open(templates, 'r') as file:
+      data = file.read()
+    self._templar.set_available_variables(subsystem_values)
+    return self.writeTemplateResultToFile(self._templar.template(data))
 
   def run(self, tmp=None, task_vars=None):
-    #if not tmp is None: print("tmp:" + tmp)
-    #print("tasks_vars:" + task_vars)
-    print("hello")
-    wp = self._loader.get_basedir()
     #tmp_remote_src = self._make_tmp_path()
-    #print(str(tmp_remote_src))
-    #new_module_args = self._create_remote_copy_args(self._task.args)
-    #new_module_args.update(
-    #              dict(
-    #                  jcliff_rule_folder=tmp_remote_src,
-    #              )
-    #          )
-    #print(new_module_args)
+    #print(str(tmp_remote_src)i)
+    templateNameBySubsys = {
+      'drivers': 'drivers.j2',
+      'datasources': 'datasource.j2',
+      'system_props': 'system-properties.j2',
+      'deployments': 'deployments.j2'
+    }
     subsystems = self._task.args['subsystems']
     for subsys in subsystems:
       for key in subsys.keys():
-        if key == 'drivers':
-          for driver in subsys[key]:
-            values= { "values": driver }
-            print(values)
-            templates = self._loader.path_dwim_relative(wp, 'templates/rules','drivers.j2')
-            with open(templates, 'r') as file:
-              data = file.read()
-            print("templating...")
-            self._templar.set_available_variables(values)
-            res = self._templar.template(data)
-            print(res)
-            temp = tempfile.TemporaryFile()
-            f = open("drivers.j2","w+")
-            f.write(res)
-            f.close()
-            #self._connection._shell.join_path(self._connection._shell.tmpdir, os.path.basename(src))
-            print("send file over")
-            self._transfer_file("drivers.j2", "/etc/ansible/jcliff/drivers.j2")
+        if key == 'drivers' or key == 'datasources':
+          i = 0
+          for subsystem_values in subsys[key]:
+            i += 1
+            self._transfer_file(self.templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsystem_values }), "/etc/ansible/jcliff/" + key + "-" + str(i) + ".yml")
+        if key == 'system_props' or key == 'deployments':
+          print(templateNameBySubsys[key])
+          self._transfer_file(self.templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsys[key]}), "/etc/ansible/jcliff/" + key + ".yml")
 
-    print("execute module")
     result = super(ActionModule, self).run(tmp, task_vars)
     result.update(self._execute_module(module_name='jcliff', task_vars=task_vars))
     print("back from module")
