@@ -1,13 +1,13 @@
 { "datasource" => {
   "{{ values['name'] }}" => {
     "pool-name" => "{{ values['jndi_name'] }}",
-    "use-java-context" => "{{ values['use_java_context'] }}",
+    {% if 'use_java_context' in values %} "use-java-context" => "{{ values['use_java_context'] }}", {% endif %}
     "connection-url" => "{{ values['connection_url'] }}",
     "driver-name" => "{{ values['driver_name'] }}",
     "jndi-name" => "{{ values['jndi_name'] }}",
-    {% if values['password'] %} "password" => "{{ values['password'] }}", {% endif %}
-    {% if values['username'] %} "user-name" => "{{ values['user_name'] }}", {% endif %}
-    "enabled" => "{{ values['enabled'] }}"
+    {% if 'password' in values %} "password" => "{{ values['password'] }}", {% endif %}
+    {% if 'username' in values %} "user-name" => "{{ values['user_name'] }}", {% endif %}
+    {% if 'enabled' in values %} "enabled" => "{{ values['enabled'] }}" {% endif %}
    }
  }
 }
