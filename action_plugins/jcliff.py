@@ -34,8 +34,9 @@ class ActionModule(ActionBase):
     return self.writeTemplateResultToFile(self._templar.template(data))
 
   def run(self, tmp=None, task_vars=None):
-    #tmp_remote_src = self._make_tmp_path()
-    #print(str(tmp_remote_src)i)
+    target_filename_suffix = ".jcliff.yml"
+    tmp_remote_src = self._make_tmp_path()
+    print(str(tmp_remote_src))
     templateNameBySubsys = {
       'drivers': 'drivers.j2',
       'datasources': 'datasource.j2',
@@ -49,14 +50,19 @@ class ActionModule(ActionBase):
           i = 0
           for subsystem_values in subsys[key]:
             i += 1
-            self._transfer_file(self.templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsystem_values }), "/etc/ansible/jcliff/" + key + "-" + str(i) + ".yml")
+            self._transfer_file(self.templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsystem_values }), tmp_remote_src + key + "-" + str(i) + target_filename_suffix)
         if key == 'system_props' or key == 'deployments':
           print(templateNameBySubsys[key])
-          self._transfer_file(self.templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsys[key]}), "/etc/ansible/jcliff/" + key + ".yml")
-
+          self._transfer_file(self.templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsys[key]}), tmp_remote_src + key + target_filename_suffix)
+    # deploying custom rules if any
+    custom_rulesdir = self._task.args['rule_file']
+    if custom_rulesdir is not None:
+      for custom_rule_file in os.listdir(custom_rulesdir):
+        self._transfer_file(custom_rulesdir + "/" + custom_rule_file, tmp_remote_src + custom_rule_file + "-custom-" + target_filename_suffix)
     result = super(ActionModule, self).run(tmp, task_vars)
-    result.update(self._execute_module(module_name='jcliff', task_vars=task_vars))
-    print("back from module")
-    #self._remove_tmp_path(self._connection._shell.tmpdir)
+    new_module_args = self._task.args.copy()
+    new_module_args.update(dict(remote_rulesdir=tmp_remote_src,))
+    result.update(self._execute_module(module_name='jcliff', module_args=new_module_args, task_vars=task_vars))
+    self._remove_tmp_path(self._connection._shell.tmpdir)
     return result
 

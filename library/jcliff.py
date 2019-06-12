@@ -1,58 +1,26 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
-from jinja2 import Template, Environment, FileSystemLoader
 import json
 import subprocess
 import os
 import tempfile
 import shutil
 
-def formatOutput(output):
-  result = ""
-  i = 0
-  for line in output.split(os.linesep):
-      i += 1
-      result += { i : line }
-  return result
-
-def renderFromTemplate(rulesdir, template_name, output_file,values):
-  # FIXME: can't load that everytime
-  file_loader = FileSystemLoader('/etc/ansible/jcliff/')
-  env = Environment(loader=file_loader)
-  template = env.get_template(template_name)
-  with open( os.path.join(rulesdir,output_file), 'w') as template_file:
-    template_file.write(template.render(values=values))
-
-def generateRuleFromTemplate(data,rulesdir):
-  if data['subsystems'] is not None:
-    subsystems = data['subsystems']
-    for subsys in subsystems:
-      if subsys['datasources'] is not None:
-        datasources = subsys["datasources"]
-        for ds in datasources:
-          renderFromTemplate(rulesdir, 'datasource.j2', "datasource-" + ds['name'] + ".yml", ds)
-      if subsys['system_props'] is not None:
-        renderFromTemplate(rulesdir,'system-properties.j2', 'system-properties.yml', subsys['system_props'])
-      if subsys['deployments'] is not None:
-        renderFromTemplate(rulesdir,'deployments.j2', 'deployments.yml', subsys['deployments'])
-      if subsys['drivers'] is not None:
-        for driver in subsys['drivers']:
-          renderFromTemplate(rulesdir,'drivers.j2', "drivers-" + driver['driver_name'] + ".yml", driver)
-
 def listRuleFiles(rulesdir):
   rules_filename = os.listdir(rulesdir)
   rule_files = []
   for filename in rules_filename:
-      print("rule file:" + rulesdir + "/" + filename)
-      rule_files.append(rulesdir + "/" + filename)
+      if filename.endswith("jcliff.yml"):
+        print("rule file:" + rulesdir + "/" + filename)
+        rule_files.append(rulesdir + "/" + filename)
   return rule_files
 
 def addToEnv(name, value):
   if value is not None:
     os.environ[name] = value
 
-def executeRulesWithJCliff(data,rulesdir):
+def executeRulesWithJCliff(data):
 
   jcliff_command_line = ["bash", "-x", data["jcliff"], "--cli=" + data['wfly_home'] + "/bin/jboss-cli.sh", "--ruledir=" + data['rules_dir'], "--controller=" + data['management_host'] + ":" + data['management_port'], "-v"]
 
@@ -61,7 +29,7 @@ def executeRulesWithJCliff(data,rulesdir):
   if data["management_password"] is not None:
     jcliff_command_line.extend(["--password=" + data["management_password"]])
 
-  jcliff_command_line.extend(listRuleFiles(rulesdir))
+  jcliff_command_line.extend(listRuleFiles(data['remote_rulesdir']))
   output = None
   status = "undefined"
   addToEnv('JAVA_HOME', data['jcliff_jvm'])
@@ -74,25 +42,16 @@ def executeRulesWithJCliff(data,rulesdir):
   except subprocess.CalledProcessError as jcliffexc:
     error = jcliffexc.output.decode()
     if (jcliffexc.returncode != 2) and (jcliffexc.returncode != 0):
-        return { "failed": True, "report": { "status" : jcliffexc.returncode, "output": output, "rulesdir": rulesdir , "jcliff_cli": jcliff_command_line , "JAVA_HOME": os.getenv("JAVA_HOME","Not defined"), "JCLIFF_HOME": os.getenv("JCLIFF_HOME", "Not defined"), "JBOSS_HOME": os.getenv("JBOSS_HOME", "Not defined"), "error": error } }, jcliffexc.returncode
+        return { "failed": True, "report": { "status" : jcliffexc.returncode, "output": output, "jcliff_cli": jcliff_command_line , "JAVA_HOME": os.getenv("JAVA_HOME","Not defined"), "JCLIFF_HOME": os.getenv("JCLIFF_HOME", "Not defined"), "JBOSS_HOME": os.getenv("JBOSS_HOME", "Not defined"), "error": error } }, jcliffexc.returncode
     else:
         return {"present:": error },2
   except Exception as e:
      output = e
      status = 1
   if status == 0:
-    return {"present" : output, "rc": status, "ruledir" : rulesdir, "jcliff_cli": jcliff_command_line }, status
+    return {"present" : output, "rc": status, "jcliff_cli": jcliff_command_line }, status
   else:
-      return {"failed" : True, "report": output, "rc": status, "ruledir" : rulesdir, "jcliff_cli": jcliff_command_line }, status
-
-def copyRulesToRulesdir(rulefiles, rulesdir):
-  try:
-    for rulefile in rulefiles.split(" "):
-      shutil.copy2(rulefile, rulesdir)
-  except shutil.Error as e:
-    print('Directory not copied. Error: %s' % e)
-  except OSError as e:
-    print('Directory not copied. Error: %s' % e)
+      return {"failed" : True, "report": output, "rc": status, "jcliff_cli": jcliff_command_line }, status
 
 def ansibleResultFromStatus(status):
   has_changed = False
@@ -104,13 +63,8 @@ def ansibleResultFromStatus(status):
   return (has_changed, has_failed)
 
 def jcliff_present(data):
-  rulesdir = tempfile.mkdtemp()
-  #generateRuleFromTemplate(data, rulesdir)
-  if data['rule_file'] is not None:
-    copyRulesToRulesdir(data['rule_file'], rulesdir)
   print("Executing JCliff:")
-  meta, status = executeRulesWithJCliff(data, rulesdir)
-  #shutil.rmtree(rulesdir)
+  meta, status = executeRulesWithJCliff(data)
   has_changed, has_failed = ansibleResultFromStatus(status)
   return (has_changed, has_failed, meta)
 
@@ -133,6 +87,7 @@ def main():
          management_port=dict(default='9990', type='str'),
          jcliff_jvm=dict(default=os.getenv("JAVA_HOME",None), type='str', required=False),
          rule_file=dict(required=False, type='str'),
+         remote_rulesdir=dict(required=False, type='str'), # do not use, value is provided by the actions plugin
          subsystems=dict(type='list', required=False, elements='dict',
             options=dict(
                 drivers=dict(type='list', required=False, elements='dict', options=dict(
