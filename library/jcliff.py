@@ -44,6 +44,7 @@ def listRuleFiles(rulesdir):
   rules_filename = os.listdir(rulesdir)
   rule_files = []
   for filename in rules_filename:
+      print("rule file:" + rulesdir + "/" + filename)
       rule_files.append(rulesdir + "/" + filename)
   return rule_files
 
@@ -104,7 +105,7 @@ def ansibleResultFromStatus(status):
 
 def jcliff_present(data):
   rulesdir = tempfile.mkdtemp()
-  generateRuleFromTemplate(data, rulesdir)
+  #generateRuleFromTemplate(data, rulesdir)
   if data['rule_file'] is not None:
     copyRulesToRulesdir(data['rule_file'], rulesdir)
   print("Executing JCliff:")
@@ -119,6 +120,7 @@ def jcliff_absent(data=None):
    meta = {"absent": "not yet implemented"}
 
 def main():
+    print("JCliff module")
     default_jcliff_home = "/usr/share/jcliff"
     fields = dict(
          jcliff_home=dict(type='str', default=default_jcliff_home),
@@ -174,7 +176,7 @@ def main():
          ),
          state=dict(default="present", choices=['present', 'absent'], type='str')
     )
-
+    global module
     module = AnsibleModule(argument_spec=fields)
     if os.environ.get("JCLIFF_HOME"):
         fields["jcliff_home"] = os.environ.get("JCLIFF_HOME")
