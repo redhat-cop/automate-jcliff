@@ -15,28 +15,28 @@ from ansible.template import Templar
 class ActionModule(ActionBase):
 
   TRANSFERS_FILES = True
+  TARGET_FILENAME_SUFFIX = ".jcliff.yml"
 
-  def _create_remote_copy_args(module_args):
-    """remove action plugin only keys"""
-    return dict((k, v) for k, v in module_args.items() if k not in ('content', 'decrypt'))
-
-  def writeTemplateResultToFile(self,content):
+  def _writeTemplateResultToFile(self,content):
     tmp = tempfile.NamedTemporaryFile('w',delete=False)
     tmp.writelines(content)
     tmp.close()
     return tmp.name
 
-  def templateFromJinjaToYml(self, templateName, subsystem_values):
+  def _templateFromJinjaToYml(self, templateName, subsystem_values):
     templates = self._loader.path_dwim_relative(self._loader.get_basedir(), 'templates/rules', templateName)
     with open(templates, 'r') as file:
       data = file.read()
     self._templar.set_available_variables(subsystem_values)
-    return self.writeTemplateResultToFile(self._templar.template(data))
+    return self._writeTemplateResultToFile(self._templar.template(data))
 
-  def run(self, tmp=None, task_vars=None):
-    target_filename_suffix = ".jcliff.yml"
-    tmp_remote_src = self._make_tmp_path()
-    print(str(tmp_remote_src))
+  def _deployCustomRulesIfAny(self, tmp_remote_src):
+    custom_rulesdir = self._task.args['rule_file']
+    if custom_rulesdir is not None:
+      for custom_rule_file in os.listdir(custom_rulesdir):
+        self._transfer_file(custom_rulesdir + "/" + custom_rule_file, tmp_remote_src + custom_rule_file + "-custom" + self.TARGET_FILENAME_SUFFIX)
+
+  def _buildAndDeployJCliffRulefiles(self, tmp_remote_src):
     templateNameBySubsys = {
       'drivers': 'drivers.j2',
       'datasources': 'datasource.j2',
@@ -50,15 +50,14 @@ class ActionModule(ActionBase):
           i = 0
           for subsystem_values in subsys[key]:
             i += 1
-            self._transfer_file(self.templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsystem_values }), tmp_remote_src + key + "-" + str(i) + target_filename_suffix)
+            self._transfer_file(self._templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsystem_values }), tmp_remote_src + key + "-" + str(i) + self.TARGET_FILENAME_SUFFIX)
         if key == 'system_props' or key == 'deployments':
-          print(templateNameBySubsys[key])
-          self._transfer_file(self.templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsys[key]}), tmp_remote_src + key + target_filename_suffix)
-    # deploying custom rules if any
-    custom_rulesdir = self._task.args['rule_file']
-    if custom_rulesdir is not None:
-      for custom_rule_file in os.listdir(custom_rulesdir):
-        self._transfer_file(custom_rulesdir + "/" + custom_rule_file, tmp_remote_src + custom_rule_file + "-custom-" + target_filename_suffix)
+          self._transfer_file(self._templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsys[key]}), tmp_remote_src + key + self.TARGET_FILENAME_SUFFIX)
+
+  def run(self, tmp=None, task_vars=None):
+    tmp_remote_src = self._make_tmp_path()
+    self._buildAndDeployJCliffRulefiles(tmp_remote_src)
+    self._deployCustomRulesIfAny(tmp_remote_src)
     result = super(ActionModule, self).run(tmp, task_vars)
     new_module_args = self._task.args.copy()
     new_module_args.update(dict(remote_rulesdir=tmp_remote_src,))
