@@ -55,10 +55,10 @@
                 connection_url: 'jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE'
                 driver_name: postgresql
           - system_props:
-              - name: myProp
-                value: myValue
-              - name: myProp2
-                value: myValue2
+              - name: aMeaningfulProperty
+                value: withAProperValue
+              - name: anotherUsefulProperty
+                value: AgainAProperValue
           - deployments:
               - artifact_id: simple-webapp-v1.war
                 name: simple-webapp
