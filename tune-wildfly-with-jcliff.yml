@@ -29,16 +29,31 @@
     - name: "Tuning Wildfly using JCliff"
       jcliff:
         wfly_home: "{{ wfly_home }}"
+#       management_username: Insert WFLY/EAP admin username here
+#       management_password: Insert WFLY/EAP admin password here
+        rule_file: custom_rules
         subsystems:
           - drivers:
               - driver_name: h2
+                driver_class_name: org.h2.driver.classname
                 driver_xa_datasource_class_name: org.h2.jdbcx.JdbcDataSource
+                driver_datasource_class_name: org.h2.jdbcx.JdbcDataSource
                 driver_module_name: com.h2database.h2
+              - driver_name: postgresql
+                driver_module_name: org.postgresql
+                driver_class_name: org.postgresql.Driver
           - datasources:
+              - name: ExampleDS
+                use_java_context: true
+                jndi_name: java:jboss/datasources/ExampleDS
+                connection_url: "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
+                driver_name: h2
+                user_name: sa
+                password: sa
               - name: MyPostgresDS
                 jndi_name: 'java:jboss/datasources/MyPostgresDS'
                 connection_url: 'jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE'
-                driver_name: h2
+                driver_name: postgresql
           - system_props:
               - name: myProp
                 value: myValue
