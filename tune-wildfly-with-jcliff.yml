@@ -29,7 +29,6 @@
     - name: "Tuning Wildfly using JCliff"
       jcliff:
         wfly_home: "{{ wfly_home }}"
-        rule_file: custom_rules
         subsystems:
           - drivers:
               - driver_name: h2
