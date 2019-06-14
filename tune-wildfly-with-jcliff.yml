@@ -29,8 +29,6 @@
     - name: "Tuning Wildfly using JCliff"
       jcliff:
         wfly_home: "{{ wfly_home }}"
-#       management_username: Insert WFLY/EAP admin username here
-#       management_password: Insert WFLY/EAP admin password here
         rule_file: custom_rules
         subsystems:
           - drivers:
