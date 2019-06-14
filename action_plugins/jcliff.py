@@ -48,10 +48,8 @@ class ActionModule(ActionBase):
     for subsys in subsystems:
       for key in subsys.keys():
         if key == 'drivers' or key == 'datasources':
-          i = 0
-          for subsystem_values in subsys[key]:
-            i += 1
-            self._transfer_file(self._templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsystem_values }), tmp_remote_src + key + "-" + str(i) + self.TARGET_FILENAME_SUFFIX)
+          for index,subsystem_values in enumerate(subsys[key]):
+            self._transfer_file(self._templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsystem_values }), tmp_remote_src + key + "-" + str(index) + self.TARGET_FILENAME_SUFFIX)
         if key == 'system_props' or key == 'deployments':
           self._transfer_file(self._templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsys[key]}), tmp_remote_src + key + self.TARGET_FILENAME_SUFFIX)
 
