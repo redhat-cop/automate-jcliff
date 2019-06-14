@@ -31,10 +31,11 @@ class ActionModule(ActionBase):
     return self._writeTemplateResultToFile(self._templar.template(data))
 
   def _deployCustomRulesIfAny(self, tmp_remote_src):
-    custom_rulesdir = self._task.args['rule_file']
-    if custom_rulesdir is not None:
-      for custom_rule_file in os.listdir(custom_rulesdir):
-        self._transfer_file(custom_rulesdir + "/" + custom_rule_file, tmp_remote_src + custom_rule_file + "-custom" + self.TARGET_FILENAME_SUFFIX)
+    if 'rule_file' in self._task.args:
+      custom_rulesdir = self._task.args['rule_file']
+      if custom_rulesdir is not None:
+        for custom_rule_file in os.listdir(custom_rulesdir):
+          self._transfer_file(custom_rulesdir + "/" + custom_rule_file, tmp_remote_src + custom_rule_file + "-custom" + self.TARGET_FILENAME_SUFFIX)
 
   def _buildAndDeployJCliffRulefiles(self, tmp_remote_src):
     templateNameBySubsys = {
