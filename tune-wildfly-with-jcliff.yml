@@ -1,6 +1,7 @@
 ---
 - name: "A Wildfly Playbook"
   hosts: "{{ wildfly_ansible_hosts | default('localhost') }}"
+  gather_facts: "{{ gather_facts_enable | default('false') }}"
   vars:
     wfly_home: "/opt/wildfly/wildfly-16.0.0.Final/"
     pgsql_module_dir: "{{ wfly_home }}//modules/org/postgresql/main"
@@ -25,29 +26,36 @@
         url: "{{ app_url }}"
         dest: "{{ app }}"
 
-    - name: "Deploy internal templates to remote target"
-      copy:
-        src: templates/rules/
-        dest: /etc/ansible/jcliff/
-
     - name: "Tuning Wildfly using JCliff"
       jcliff:
         wfly_home: "{{ wfly_home }}"
         subsystems:
           - drivers:
               - driver_name: h2
+                driver_class_name: org.h2.driver.classname
                 driver_xa_datasource_class_name: org.h2.jdbcx.JdbcDataSource
+                driver_datasource_class_name: org.h2.jdbcx.JdbcDataSource
                 driver_module_name: com.h2database.h2
+              - driver_name: postgresql
+                driver_module_name: org.postgresql
+                driver_class_name: org.postgresql.Driver
           - datasources:
+              - name: ExampleDS
+                use_java_context: true
+                jndi_name: java:jboss/datasources/ExampleDS
+                connection_url: "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
+                driver_name: h2
+                user_name: sa
+                password: sa
               - name: MyPostgresDS
                 jndi_name: 'java:jboss/datasources/MyPostgresDS'
                 connection_url: 'jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE'
-                driver_name: h2
+                driver_name: postgresql
           - system_props:
-              - name: myProp
-                value: myValue
-              - name: myProp2
-                value: myValue2
+              - name: aMeaningfulProperty
+                value: withAProperValue
+              - name: anotherUsefulProperty
+                value: AgainAProperValue
           - deployments:
               - artifact_id: simple-webapp-v1.war
                 name: simple-webapp
