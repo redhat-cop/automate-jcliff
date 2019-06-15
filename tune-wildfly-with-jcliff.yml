@@ -21,7 +21,7 @@
         name: jcliff
         state: present
 
-    - name: "Download a demo app to deplou"
+    - name: "Download a demo app to deploy"
       get_url:
         url: "{{ app_url }}"
         dest: "{{ app }}"
