@@ -3,4 +3,4 @@
 set -e
 
 ansible-playbook -vvvv /work/wildfly-setup.yml
-ansible-playbook -vvvv /work/tune-wildfly-with-jcliff.yml
+ansible-playbook -vvvv /work/tune-wildfly-with-jcliff.yml --extra-vars "custom_rules_folder=files/custom_rules"

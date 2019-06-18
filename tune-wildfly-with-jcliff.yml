@@ -8,6 +8,7 @@
     jdbc_drive_url: https://repo.maven.apache.org/maven2/org/postgresql/postgresql/9.2-1002-jdbc4/postgresql-9.2-1002-jdbc4.jar
     app_url: http://people.redhat.com/~rpelisse/simple-webapp.war
     app: /tmp/simple-webapp.war
+    path_to_custom_rules: "{{ custom_rules_folder | default('../../files/custom_rules') }}"
   tasks:
     - name: "Add JCliff Repo"
       yum_repository:
@@ -29,6 +30,7 @@
     - name: "Tuning Wildfly using JCliff"
       jcliff:
         wfly_home: "{{ wfly_home }}"
+        rule_file: "{{ path_to_custom_rules }}"
         subsystems:
           - drivers:
               - driver_name: h2
