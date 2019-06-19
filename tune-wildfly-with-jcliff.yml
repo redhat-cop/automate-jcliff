@@ -64,6 +64,44 @@
                 path: "{{ app }}"
       notify: "Restart Wildfly Server"
 
+    - name: "Restarting Wfly (can't wait for handler to happen, as we want to check now if the JCliff changes have been applied)"
+      service:
+        name: wfly
+        state: restarted
+
+    - name: "sleep for 60s to let a chance for Wfly to be fully up"
+      wait_for:
+        timeout: 300
+
+    - name: "Check if Drivers have been deployed"
+      shell: "{{ wfly_home }}/bin/jboss-cli.sh --connect --command='/subsystem=datasources/jdbc-driver={{ driver_name }}:read-resource'"
+      loop:
+        - h2
+        - postgresql
+      loop_control:
+        loop_var: driver_name
+
+    - name: "Check if DS have been deployed"
+      shell: "{{ wfly_home }}/bin/jboss-cli.sh --connect --command='/subsystem=datasources/data-source={{ ds_name }}:read-resource'"
+      loop:
+        - ExampleDS
+        - MyPostgresDS
+      loop_control:
+        loop_var: ds_name
+
+    - name: "Check if properties have been deployed"
+      shell: "{{ wfly_home }}/bin/jboss-cli.sh --connect --command='/system-property={{ prop_name }}:read-resource'"
+      loop:
+        - aMeaningfulProperty
+        - anotherUsefulProperty
+      loop_control:
+        loop_var: prop_name
+
+    - name: "Check if webapp is accessible"
+      uri:
+        url: http://localhost:8080/info
+        return_content: yes
+
   handlers:
     - name: "Restart Wildfly Server"
       service:
