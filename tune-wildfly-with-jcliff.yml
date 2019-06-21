@@ -9,6 +9,7 @@
     app_url: http://people.redhat.com/~rpelisse/simple-webapp.war
     app: /tmp/simple-webapp.war
     path_to_custom_rules: "{{ custom_rules_folder | default('../../files/custom_rules') }}"
+    wfly_time_to_boot: "{{ custom_wfly_time_to_boot | default('60') }}"
   tasks:
     - name: "Add JCliff Repo"
       yum_repository:
@@ -63,6 +64,50 @@
                 name: simple-webapp
                 path: "{{ app }}"
       notify: "Restart Wildfly Server"
+
+    - name: "Restarting Wfly (can't wait for handler to happen, as we want to check now if the JCliff changes have been applied)"
+      service:
+        name: wfly
+        state: restarted
+
+    - name: "sleep for {{ wfly_time_to_boot }}s to let a chance for Wfly to be fully up"
+      wait_for:
+        timeout: "{{ wfly_time_to_boot }}"
+
+    - name: "Check if Drivers have been deployed"
+      command: "{{ wfly_home }}/bin/jboss-cli.sh --connect --command='/subsystem=datasources/jdbc-driver={{ driver_name }}:read-resource'"
+      register: cli_result
+      changed_when: cli_result.rc != 0
+      loop:
+        - h2
+        - postgresql
+      loop_control:
+        loop_var: driver_name
+
+    - name: "Check if DS have been deployed"
+      command: "{{ wfly_home }}/bin/jboss-cli.sh --connect --command='/subsystem=datasources/data-source={{ ds_name }}:read-resource'"
+      register: cli_result
+      changed_when: cli_result.rc != 0
+      loop:
+        - ExampleDS
+        - MyPostgresDS
+      loop_control:
+        loop_var: ds_name
+
+    - name: "Check if properties have been deployed"
+      command: "{{ wfly_home }}/bin/jboss-cli.sh --connect --command='/system-property={{ prop_name }}:read-resource'"
+      register: cli_result
+      changed_when: cli_result.rc != 0
+      loop:
+        - aMeaningfulProperty
+        - anotherUsefulProperty
+      loop_control:
+        loop_var: prop_name
+
+    - name: "Check if webapp is accessible"
+      uri:
+        url: http://localhost:8080/info
+        return_content: yes
 
   handlers:
     - name: "Restart Wildfly Server"
