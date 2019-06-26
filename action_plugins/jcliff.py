@@ -45,13 +45,14 @@ class ActionModule(ActionBase):
       'deployments': 'deployments.j2'
     }
     subsystems = self._task.args['subsystems']
-    for subsys in subsystems:
-      for key in subsys.keys():
-        if key == 'drivers' or key == 'datasources':
-          for index,subsystem_values in enumerate(subsys[key]):
-            self._transfer_file(self._templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsystem_values }), tmp_remote_src + key + "-" + str(index) + self.TARGET_FILENAME_SUFFIX)
-        if key == 'system_props' or key == 'deployments':
-          self._transfer_file(self._templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsys[key]}), tmp_remote_src + key + self.TARGET_FILENAME_SUFFIX)
+    if subsystems is not None:
+      for subsys in subsystems:
+        for key in subsys.keys():
+          if key == 'drivers' or key == 'datasources':
+            for index, subsystem_values in enumerate(subsys[key]):
+              self._transfer_file(self._templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsystem_values }), tmp_remote_src + key + "-" + str(index) + self.TARGET_FILENAME_SUFFIX)
+          if key == 'system_props' or key == 'deployments':
+            self._transfer_file(self._templateFromJinjaToYml(templateNameBySubsys[key], { "values": subsys[key]}), tmp_remote_src + key + self.TARGET_FILENAME_SUFFIX)
 
   def run(self, tmp=None, task_vars=None):
     tmp_remote_src = self._make_tmp_path()
