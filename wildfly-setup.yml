@@ -2,11 +2,12 @@
 - name: "A Wildfly Playbook"
   hosts: "{{ wildfly_ansible_hosts | default('localhost') }}"
   vars:
+    wfly_version: 16.0.0.Final
     workdir: /opt/wildfly/
-    wlfy_zipfile: wildfly-16.0.0.Final.zip
-    wfly_download_url: https://download.jboss.org/wildfly/16.0.0.Final/{{ wlfy_zipfile }}
+    wfly_zipfile: "wildfly-{{ wfly_version }}.zip"
+    wfly_download_url: https://download.jboss.org/wildfly/{{ wfly_version }}/{{ wfly_zipfile }}
     wildfly:
-      home: "{{ workdir }}/wildfly-16.0.0.Final/"
+      home: "{{ workdir }}/wildfly-{{ wfly_version }}/"
       user: wildfly
       min_mem: 64m
       max_mem: 512m
@@ -46,7 +47,7 @@
         owner: "{{ wildfly.user }}"
         group: "{{ wildfly.user }}"
         remote_src: yes
-        creates: "{{ workdir }}/{{ wlfy_zipfile }}"
+        creates: "{{ wildfly.home }}"
 
     - name: "Ensure Wildfly Postgres module directory tree is present: {{ pgsql_module_dir }}"
       file:
