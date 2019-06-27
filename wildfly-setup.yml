@@ -4,8 +4,8 @@
   vars:
     wfly_version: 16.0.0.Final
     workdir: /opt/wildfly/
-    wlfy_zipfile: "wildfly-{{ wfly_version }}.zip"
-    wfly_download_url: https://download.jboss.org/wildfly/{{ wfly_version }}/{{ wlfy_zipfile }}
+    wfly_zipfile: "wildfly-{{ wfly_version }}.zip"
+    wfly_download_url: https://download.jboss.org/wildfly/{{ wfly_version }}/{{ wfly_zipfile }}
     wildfly:
       home: "{{ workdir }}/wildfly-{{ wfly_version }}/"
       user: wildfly
