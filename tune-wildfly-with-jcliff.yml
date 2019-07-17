@@ -10,19 +10,9 @@
     app: /tmp/simple-webapp.war
     path_to_custom_rules: "{{ custom_rules_folder | default('../../files/custom_rules') }}"
     wfly_time_to_boot: "{{ custom_wfly_time_to_boot | default('60') }}"
+  roles:
+    - redhat-cop.jcliff
   tasks:
-    - name: "Add JCliff Repo"
-      yum_repository:
-        name: jcliff
-        description: JCliff repository
-        baseurl: http://people.redhat.com/~rpelisse/jcliff.yum/
-        gpgcheck: 0
-
-    - name: "Ensure JCliff is installed"
-      yum:
-        name: jcliff
-        state: present
-
     - name: "Download a demo app to deploy"
       get_url:
         url: "{{ app_url }}"

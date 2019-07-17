@@ -23,8 +23,16 @@ class ActionModule(ActionBase):
     tmp.close()
     return tmp.name
 
+  # this is temporary workaround, until we figured out a proper way
+  # of doing this
+  def _get_role_home(self):
+    return os.environ['HOME'] + '/.ansible/roles/redhat-cop.jcliff'
+
   def _templateFromJinjaToYml(self, templateName, subsystem_values):
     templates = self._loader.path_dwim_relative(self._loader.get_basedir(), 'templates/rules', templateName)
+    if ( not os.path.isfile(templates) ):
+      templates = self._get_role_home() + '/templates/rules/' + templateName
+
     with open(templates, 'r') as file:
       data = file.read()
     self._templar.set_available_variables(subsystem_values)
