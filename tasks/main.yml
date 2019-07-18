@@ -1,7 +1,7 @@
 ---
 - name: "Install JCliff packages using Yum if available"
   block:
-    - name: "Add JCliff Repo"
+    - name: "Add JCliff Yum Repository"
       yum_repository:
         name: jcliff
         description: JCliff repository
