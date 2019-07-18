@@ -1,12 +1,15 @@
 ---
-- name: "Add JCliff Repo"
-  yum_repository:
-    name: jcliff
-    description: JCliff repository
-    baseurl: http://people.redhat.com/~rpelisse/jcliff.yum/
-    gpgcheck: 0
+- name: "Install JCliff packages using Yum if available"
+  block:
+    - name: "Add JCliff Repo"
+      yum_repository:
+        name: jcliff
+        description: JCliff repository
+        baseurl: http://people.redhat.com/~rpelisse/jcliff.yum/
+        gpgcheck: 0
 
-- name: "Ensure JCliff is installed"
-  yum:
-    name: jcliff
-    state: present
+    - name: "Ensure JCliff is installed"
+      yum:
+        name: jcliff
+        state: present
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' or ansible_distribution == 'Fedora'
