@@ -15,10 +15,11 @@ env:
 
 before_install:
   - sudo apt-get update -qq
+  - sudo apt-get install python-apt
 
 install:
   - pip install -U pip
-  - pip install ansible==2.7 ansible-lint yamllint flake8 molecule docker pytest python-apt
+  - pip install ansible==2.7 ansible-lint yamllint flake8 molecule docker pytest
 
 # command to run tests
 script:
