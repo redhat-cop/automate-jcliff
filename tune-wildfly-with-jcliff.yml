@@ -11,7 +11,7 @@
     path_to_custom_rules: "{{ custom_rules_folder | default('../../files/custom_rules') }}"
     wfly_time_to_boot: "{{ custom_wfly_time_to_boot | default('60') }}"
   roles:
-    - redhat-cop.jcliff
+    - .
   tasks:
     - name: "Download a demo app to deploy"
       get_url:
