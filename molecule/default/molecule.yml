@@ -18,6 +18,8 @@ platforms:
     command: "/usr/sbin/init"
 provisioner:
   name: ansible
+  options:
+    extra-vars: wildfly_ansible_hosts=all
   lint:
     name: ansible-lint
     options:
