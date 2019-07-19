@@ -18,10 +18,13 @@ platforms:
     command: "/usr/sbin/init"
 provisioner:
   name: ansible
-  lint:
-    name: ansible-lint
   options:
     extra-vars: wildfly_ansible_hosts=all
+  lint:
+    name: ansible-lint
+    options:
+      x:
+        - 701
 scenario:
   name: default
   test_sequence:
