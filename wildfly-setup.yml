@@ -21,6 +21,7 @@
   tasks:
     # mostly needed if running on a docker container
     - name: "Ensures required packages are installed"
+      become: True
       yum:
         name:
           - zip
