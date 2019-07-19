@@ -18,7 +18,7 @@ before_install:
 
 install:
   - pip install -U pip
-  - pip install ansible==2.7 ansible-lint yamllint flake8 molecule docker pytest
+  - pip install ansible==2.7 ansible-lint yamllint flake8 molecule docker pytest python-apt
 
 # command to run tests
 script:
