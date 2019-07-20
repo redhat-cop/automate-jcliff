@@ -13,6 +13,10 @@
   roles:
     - .
   tasks:
+    - name: "Include automate-jcliff role"
+      include_role:
+        name: "{{ playbook_dir | realpath }}"
+
     - name: "Download a demo app to deploy"
       get_url:
         url: "{{ app_url }}"
