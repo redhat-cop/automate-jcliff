@@ -101,6 +101,7 @@ def main():
                 ),
                 datasources=dict(type='list', required=False, elements='dict', options=dict(
                     name=dict(type='str', required=True),
+                    pool_name=dict(type='str', required=False),
                     jndi_name=dict(type='str', required=True),
                     use_java_context=dict(type='str', default='true'),
                     connection_url=dict(type='str', required=True),
