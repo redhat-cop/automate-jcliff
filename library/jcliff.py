@@ -7,7 +7,7 @@ import os
 import tempfile
 import shutil
 
-def listRuleFiles(rulesdir):
+def list_rule_files(rulesdir):
   rules_filename = os.listdir(rulesdir)
   rule_files = []
   for filename in rules_filename:
@@ -16,11 +16,11 @@ def listRuleFiles(rulesdir):
       rule_files.append(rulesdir + "/" + filename)
   return rule_files
 
-def addToEnv(name, value):
+def add_to_env(name, value):
   if value is not None:
     os.environ[name] = value
 
-def executeRulesWithJCliff(data):
+def execute_rules_with_jcliff(data):
 
   jcliff_command_line = ["bash", "-x",
                          data["jcliff"], "--cli=" + data['wfly_home'] + "/bin/jboss-cli.sh",
@@ -33,12 +33,12 @@ def executeRulesWithJCliff(data):
   if data["management_password"] is not None:
     jcliff_command_line.extend(["--password=" + data["management_password"]])
 
-  jcliff_command_line.extend(listRuleFiles(data['remote_rulesdir']))
+  jcliff_command_line.extend(list_rule_files(data['remote_rulesdir']))
   output = None
   status = "undefined"
-  addToEnv('JAVA_HOME', data['jcliff_jvm'])
-  addToEnv('JBOSS_HOME', data['wfly_home'])
-  addToEnv('JCLIFF_HOME', data['jcliff_home'])
+  add_to_env('JAVA_HOME', data['jcliff_jvm'])
+  add_to_env('JBOSS_HOME', data['wfly_home'])
+  add_to_env('JCLIFF_HOME', data['jcliff_home'])
 
   try:
     output = subprocess.check_output(jcliff_command_line,
@@ -70,7 +70,7 @@ def executeRulesWithJCliff(data):
             "rc": status,
             "jcliff_cli": jcliff_command_line}, status
 
-def ansibleResultFromStatus(status):
+def ansible_result_from_status(status):
   has_changed = False
   has_failed = False
   if status == 2:
@@ -81,8 +81,8 @@ def ansibleResultFromStatus(status):
 
 def jcliff_present(data):
   print("Executing JCliff:")
-  meta, status = executeRulesWithJCliff(data)
-  has_changed, has_failed = ansibleResultFromStatus(status)
+  meta, status = execute_rules_with_jcliff(data)
+  has_changed, has_failed = ansible_result_from_status(status)
   return (has_changed, has_failed, meta)
 
 def jcliff_absent(data=None):
