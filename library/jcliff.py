@@ -1,10 +1,14 @@
 #!/usr/bin/python
+""" This is a jcliff module, wrapping the utility Java tool JCliff
+    in order to have Ansible supports fine tuning of Wildfly / JBoss
+    EAP server configuration (subsystems)"""
 import subprocess
 import os
 
 from ansible.module_utils.basic import AnsibleModule
 
 def list_rule_files(rulesdir):
+  """ list all the files inside the rule's directory """
   rules_filename = os.listdir(rulesdir)
   rule_files = []
   for filename in rules_filename:
@@ -14,10 +18,12 @@ def list_rule_files(rulesdir):
   return rule_files
 
 def add_to_env(name, value):
+  """ add provided variables to environnement """
   if value is not None:
     os.environ[name] = value
 
 def execute_rules_with_jcliff(data):
+  """ execute the rules provided using jcliff """
 
   jcliff_command_line = ["bash", "-x",
                          data["jcliff"], "--cli=" + data['wfly_home'] + "/bin/jboss-cli.sh",
@@ -68,6 +74,7 @@ def execute_rules_with_jcliff(data):
             "jcliff_cli": jcliff_command_line}, status
 
 def ansible_result_from_status(status):
+  """ extract the ansible result from the status returned by jcliff """
   has_changed = False
   has_failed = False
   if status == 2:
@@ -77,17 +84,19 @@ def ansible_result_from_status(status):
   return (has_changed, has_failed)
 
 def jcliff_present(data):
+  """ implement ansible present state using jcliff """
   print("Executing JCliff:")
   meta, status = execute_rules_with_jcliff(data)
   has_changed, has_failed = ansible_result_from_status(status)
   return (has_changed, has_failed, meta)
 
 def jcliff_absent(data=None):
+  """ jcliff and this module does NOT support the absent state """
   has_changed = False
-  #subprocess.run(["ls", "-l"])
   meta = {"absent": "not yet implemented"}
 
 def main():
+  """ Main method for this module """
   print("JCliff module")
   default_jcliff_home = "/usr/share/jcliff"
   fields = dict(
