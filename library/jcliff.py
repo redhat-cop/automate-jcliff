@@ -22,7 +22,11 @@ def addToEnv(name, value):
 
 def executeRulesWithJCliff(data):
 
-  jcliff_command_line = ["bash", "-x", data["jcliff"], "--cli=" + data['wfly_home'] + "/bin/jboss-cli.sh", "--ruledir=" + data['rules_dir'], "--controller=" + data['management_host'] + ":" + data['management_port'], "-v"]
+  jcliff_command_line = ["bash", "-x",
+                         data["jcliff"], "--cli=" + data['wfly_home'] + "/bin/jboss-cli.sh",
+                         "--ruledir=" + data['rules_dir'],
+                         "--controller=" + data['management_host'] + ":" + data['management_port'],
+                         "-v"]
 
   if data["management_username"] is not None:
     jcliff_command_line.extend(["--user=" + data["management_username"]])
@@ -37,12 +41,22 @@ def executeRulesWithJCliff(data):
   addToEnv('JCLIFF_HOME', data['jcliff_home'])
 
   try:
-    output = subprocess.check_output(jcliff_command_line, stderr=subprocess.STDOUT, shell=False, env=os.environ)
+    output = subprocess.check_output(jcliff_command_line,
+                                     stderr=subprocess.STDOUT,
+                                     shell=False,
+                                     env=os.environ)
     status = 0
   except subprocess.CalledProcessError as jcliffexc:
     error = jcliffexc.output.decode()
     if (jcliffexc.returncode != 2) and (jcliffexc.returncode != 0):
-      return {"failed": True, "report": {"status" : jcliffexc.returncode, "output": output, "jcliff_cli": jcliff_command_line, "JAVA_HOME": os.getenv("JAVA_HOME","Not defined"), "JCLIFF_HOME": os.getenv("JCLIFF_HOME", "Not defined"), "JBOSS_HOME": os.getenv("JBOSS_HOME", "Not defined"), "error": error}}, jcliffexc.returncode
+      return {"failed": True, "report":
+              {"status" : jcliffexc.returncode,
+               "output": output,
+               "jcliff_cli": jcliff_command_line,
+               "JAVA_HOME": os.getenv("JAVA_HOME", "Not defined"),
+               "JCLIFF_HOME": os.getenv("JCLIFF_HOME", "Not defined"),
+               "JBOSS_HOME": os.getenv("JBOSS_HOME", "Not defined"),
+               "error": error}}, jcliffexc.returncode
     else:
       return {"present:": error}, 2
   except Exception as e:
@@ -51,7 +65,10 @@ def executeRulesWithJCliff(data):
   if status == 0:
     return {"present" : output, "rc": status, "jcliff_cli": jcliff_command_line}, status
   else:
-    return {"failed" : True, "report": output, "rc": status, "jcliff_cli": jcliff_command_line}, status
+    return {"failed" : True,
+            "report": output,
+            "rc": status,
+            "jcliff_cli": jcliff_command_line}, status
 
 def ansibleResultFromStatus(status):
   has_changed = False
@@ -87,7 +104,8 @@ def main():
       management_port=dict(default='9990', type='str'),
       jcliff_jvm=dict(default=os.getenv("JAVA_HOME", None), type='str', required=False),
       rule_file=dict(required=False, type='str'),
-      remote_rulesdir=dict(required=False, type='str'), # do not use, value is provided by the actions plugin
+      # do not use the following parameters, value is provided by the actions plugin
+      remote_rulesdir=dict(required=False, type='str'),
       subsystems=dict(type='list', required=False, elements='dict',
                       options=dict(
                           drivers=dict(type='list', required=False, elements='dict', options=dict(
@@ -97,29 +115,33 @@ def main():
                               driver_class_name=dict(type='str', default='undefined'),
                               driver_datasource_class_name=dict(type='str', default='undefined'),
                               module_slot=dict(type='str', default='undefined'))),
-                          datasources=dict(type='list', required=False, elements='dict', options=dict(
-                              name=dict(type='str', required=True),
-                              pool_name=dict(type='str', required=False),
-                              jndi_name=dict(type='str', required=True),
-                              use_java_context=dict(type='str', default='true'),
-                              connection_url=dict(type='str', required=True),
-                              driver_name=dict(type='str', required=True),
-                              enabled=dict(type='str', default='true'),
-                              password=dict(type='str', required=False),
-                              user_name=dict(type='str', required=False),
-                              max_pool_size=dict(type='str', default='undefined'),
-                              min_pool_size=dict(type='str', default='undefined'),
-                              idle_timeout_minutes=dict(type='str', default='undefined'),
-                              query_timeout=dict(type='str', default='undefined'),
-                              check_valid_connection_sql=dict(type='str', default='undefined'),
-                              validate_on_match=dict(type='str', default='undefined'))),
-                          system_props=dict(type='list', required=False, elements='dict', options=dict(
-                              name=dict(type='str', required=False),
-                              value=dict(type='str', required=False))),
-                          deployments=dict(type='list', required=False, elements='dict', options=dict(
-                              artifact_id=dict(type='str', required=True),
-                              name=dict(type='str', required=False),
-                              path=dict(type='str', required=True))))),
+                          datasources=dict(
+                              type='list', required=False, elements='dict',
+                              options=dict(
+                                  name=dict(type='str', required=True),
+                                  pool_name=dict(type='str', required=False),
+                                  jndi_name=dict(type='str', required=True),
+                                  use_java_context=dict(type='str', default='true'),
+                                  connection_url=dict(type='str', required=True),
+                                  driver_name=dict(type='str', required=True),
+                                  enabled=dict(type='str', default='true'),
+                                  password=dict(type='str', required=False),
+                                  user_name=dict(type='str', required=False),
+                                  max_pool_size=dict(type='str', default='undefined'),
+                                  min_pool_size=dict(type='str', default='undefined'),
+                                  idle_timeout_minutes=dict(type='str', default='undefined'),
+                                  query_timeout=dict(type='str', default='undefined'),
+                                  check_valid_connection_sql=dict(type='str', default='undefined'),
+                                  validate_on_match=dict(type='str', default='undefined'))),
+                          system_props=dict(
+                              type='list', required=False, elements='dict', options=dict(
+                                  name=dict(type='str', required=False),
+                                  value=dict(type='str', required=False))),
+                          deployments=dict(
+                              type='list', required=False, elements='dict', options=dict(
+                                  artifact_id=dict(type='str', required=True),
+                                  name=dict(type='str', required=False),
+                                  path=dict(type='str', required=True))))),
       state=dict(default="present", choices=['present', 'absent'], type='str')
     )
   global module
