@@ -150,7 +150,6 @@ def main():
                                   path=dict(type='str', required=True))))),
       state=dict(default="present", choices=['present', 'absent'], type='str')
     )
-  global module
   module = AnsibleModule(argument_spec=fields)
   if os.environ.get("JCLIFF_HOME"):
     fields["jcliff_home"] = os.environ.get("JCLIFF_HOME")
