@@ -1,11 +1,8 @@
 #!/usr/bin/python
-
-from ansible.module_utils.basic import AnsibleModule
-import json
 import subprocess
 import os
-import tempfile
-import shutil
+
+from ansible.module_utils.basic import AnsibleModule
 
 def list_rule_files(rulesdir):
   rules_filename = os.listdir(rulesdir)
