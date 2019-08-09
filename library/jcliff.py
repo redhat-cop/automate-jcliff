@@ -75,7 +75,7 @@ def ansible_result_from_status(status):
   has_failed = False
   if status == 2:
     has_changed = True
-  if status != 0 and status != 2:
+  if status not in (0, 2):
     has_failed = True
   return (has_changed, has_failed)
 
