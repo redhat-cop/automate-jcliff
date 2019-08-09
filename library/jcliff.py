@@ -90,8 +90,7 @@ def jcliff_present(data):
 
 def jcliff_absent(data=None):
   """ jcliff and this module does NOT support the absent state """
-  has_changed = False
-  meta = {"absent": "not yet implemented"}
+  return {"absent": "not yet implemented", "data": data}
 
 def main():
   """ Main method for this module """
