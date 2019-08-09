@@ -150,7 +150,8 @@ def main():
   module = AnsibleModule(argument_spec=fields)
   if os.environ.get("JCLIFF_HOME"):
     fields["jcliff_home"] = os.environ.get("JCLIFF_HOME")
-  # TODO validation that jcliff_home exits + dir
+    if not os.path.exists(fields["jcliff_home"]) or os.path.isfile(fields["jcliff_home"]):
+      raise RuntimeError("Invalid JCLIFF_HOME:" + fields["jcliff_home"])
 
   choice_map = {
       "present": jcliff_present,
