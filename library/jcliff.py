@@ -60,18 +60,16 @@ def execute_rules_with_jcliff(data):
                "JCLIFF_HOME": os.getenv("JCLIFF_HOME", "Not defined"),
                "JBOSS_HOME": os.getenv("JBOSS_HOME", "Not defined"),
                "error": error}}, jcliffexc.returncode
-    else:
-      return {"present:": error}, 2
-  except Exception as e:
-    output = e
+    return {"present:": error}, 2
+  except Exception as exception:
+    output = exception
     status = 1
   if status == 0:
     return {"present" : output, "rc": status, "jcliff_cli": jcliff_command_line}, status
-  else:
-    return {"failed" : True,
-            "report": output,
-            "rc": status,
-            "jcliff_cli": jcliff_command_line}, status
+  return {"failed" : True,
+          "report": output,
+          "rc": status,
+          "jcliff_cli": jcliff_command_line}, status
 
 def ansible_result_from_status(status):
   """ extract the ansible result from the status returned by jcliff """
