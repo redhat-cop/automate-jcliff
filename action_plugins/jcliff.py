@@ -1,9 +1,6 @@
-# from ansible import utils
-# import ansible.constants as C
-# import ansible.utils.template as template
-# from ansible import errors
-# from ansible.runner.return_data import ReturnData
-""" Module doct string """
+""" This action module use JCliff rule templates to
+    render directive before transfering them as rule
+    file to the target host. """
 import os
 import tempfile
 
@@ -21,7 +18,7 @@ def _get_role_home(plugin_home='/.ansible/roles/redhat-cop.jcliff'):
   return os.environ['HOME'] + plugin_home
 
 class ActionModule(ActionBase):
-  """ Class doc string """
+  """ JCliff action module """
   TRANSFERS_FILES = True
   TARGET_FILENAME_SUFFIX = ".jcliff.yml"
 
