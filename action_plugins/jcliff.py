@@ -15,7 +15,7 @@ def _write_template_result_to_file(content):
 # this is temporary workaround, until we figured out a proper way
 # of doing this
 def _get_role_home(plugin_home='/.ansible/roles/redhat-cop.jcliff'):
-  return os.environ['HOME'] + plugin_home
+  return os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
 class ActionModule(ActionBase):
   """ JCliff action module """
