@@ -102,7 +102,7 @@ def main():
       management_username=dict(required=False, type='str'),
       management_password=dict(required=False, type='str'),
       rules_dir=dict(type='str', default=default_jcliff_home + "/rules"),
-      wfly_home=dict(required=True, type='str'),
+      wfly_home=dict(required=True, aliases=['jboss_home'], type='str'),
       management_host=dict(default='localhost', type='str'),
       management_port=dict(default='9990', type='str'),
       jcliff_jvm=dict(default=os.getenv("JAVA_HOME", None), type='str', required=False),
