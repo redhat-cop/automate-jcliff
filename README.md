@@ -1,6 +1,6 @@
 # WARNING - This project has been migrated to an Ansible Collection
 
-This project has been discontinued and replaced by its Ansible Collection port. Don't use the role provided here, but rather the new [Ansible collection](https://github.com/rpelisse/ansible_collections_jcliff).
+This project has been discontinued and replaced by its Ansible Collection port. Don't use the role provided here, but rather the new [Ansible collection](https://github.com/wildfly-extras/ansible_collections_jcliff).
 
 Refer to [Ansible Collections JCliff demo](https://github.com/rpelisse/ansible_collections_jcliff_demo) to learn how to use the collection.
 
